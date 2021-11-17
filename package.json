@@ -1,0 +1,16 @@
+{
+  "name": "my-service",
+  "version": "1.0.0",
+  "description": "\"http-service\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon test.js"
+  },
+  "author": "SEFA UN",
+  "license": "ISC",
+  "dependencies": {
+    "moment": "^2.29.1",
+    "nodemon": "^2.0.15"
+  }
+}
