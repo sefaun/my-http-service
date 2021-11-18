@@ -1,12 +1,11 @@
 const net = require('net')
 const EventEmitter = require('events')
-const { header } = require('./src/header')
 
 
 class MyService extends EventEmitter {
 
   constructor(server) {
-    super()
+    super(server)
 
     this.server = server
   }
@@ -70,7 +69,6 @@ class MyService extends EventEmitter {
 
         //Get Path
         socket.path = request.split(' ')[1].trim()
-
         //Method Check
         socket.method = this.checkMethod(request)
         //Get Header
@@ -79,7 +77,8 @@ class MyService extends EventEmitter {
         socket.query = this.requestQueries(request)
         //Body Data
         socket.body = this.requestBody(request)
-        //header(socket)
+
+        this.emit(`${socket.method}`, socket, "evet")
       })
 
       socket.on('close', (hadError) => {
