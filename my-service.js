@@ -11,39 +11,50 @@ class MyService extends EventEmitter {
     this.server = server
   }
 
-  requestHeader(socket, request) {
-    socket.header = request
+  requestHeader(request) {
+    var headers = {}
+    const header = request.split('\r\n\r\n')[0].split('\r\n')
+    for (let i = 1; i < header.length; i++) {
+      headers[header[i].trim().split(':')[0].replace('-', '_').toLowerCase()] = header[i].split(':')[1].replace(' ', '')
+    }
+    return headers
   }
 
-  requestBody(socket, body) {
-    socket.body = body
+  requestQueries(request) {
+    var query = {}
+    const path = request.split(' ')[1].trim()
+    const queries = path.split('?')[1].split('&');
+
+    for (const i of queries) {
+      query[i.split('=')[0]] = i.split('=')[1]
+    }
+    return query
   }
 
-  checkMethod(socket, request) {
+  requestBody(request) {
+    return JSON.parse(request.split('\r\n\r\n')[1])
+  }
 
+  checkMethod(request) {
+    var method = ""
     switch (request.split(' ')[0]) {
       case 'GET':
-        socket.method = 'GET'
+        method = 'GET'
         break;
       case 'POST':
-        socket.method = 'POST'
+        method = 'POST'
         break;
       case 'PUT':
-        socket.method = 'PUT'
+        method = 'PUT'
         break;
       case 'DELETE':
-        socket.method = 'DELETE'
+        method = 'DELETE'
         break;
 
       default:
-        socket.method = 'NULL'
         break;
     }
-
-  }
-
-  requestQueries() {
-
+    return method
   }
 
   createServer() {
@@ -54,18 +65,21 @@ class MyService extends EventEmitter {
       })
 
       socket.on('data', (data) => {
-        console.log(data.toString())
+        //console.log(data.toString())
         const request = data.toString()
 
+        //Get Path
+        socket.path = request.split(' ')[1].trim()
+
         //Method Check
-        this.checkMethod(socket, request)
+        socket.method = this.checkMethod(request)
+        //Get Header
+        socket.header = this.requestHeader(request)
         //Get Queries
-        this.requestQueries(socket, request)
-        header(socket)
-
-        //Client Close
-        socket.end()
-
+        socket.query = this.requestQueries(request)
+        //Body Data
+        socket.body = this.requestBody(request)
+        //header(socket)
       })
 
       socket.on('close', (hadError) => {
