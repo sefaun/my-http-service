@@ -7,31 +7,46 @@ class MyService extends EventEmitter {
 
   constructor(server) {
     super()
+
     this.server = server
-    this.method = ""
   }
 
-  checkMethod(request) {
+  requestHeader(socket, request) {
+    socket.header = request
+  }
 
-    const requestMethod = request.split(' ')[0]
+  requestBody(socket, body) {
+    socket.body = body
+  }
 
-    if (requestMethod === 'GET') {
-      this.method = 'GET'
+  checkMethod(socket, request) {
+
+    switch (request.split(' ')[0]) {
+      case 'GET':
+        socket.method = 'GET'
+        break;
+      case 'POST':
+        socket.method = 'POST'
+        break;
+      case 'PUT':
+        socket.method = 'PUT'
+        break;
+      case 'DELETE':
+        socket.method = 'DELETE'
+        break;
+
+      default:
+        socket.method = 'NULL'
+        break;
     }
-    if (requestMethod === 'POST') {
-      this.method = 'POST'
-    }
-    if (requestMethod === 'PUT') {
-      this.method = 'PUT'
-    }
-    if (requestMethod === 'DELETE') {
-      this.method = 'DELETE'
-    }
+
+  }
+
+  requestQueries() {
 
   }
 
   createServer() {
-
     this.server.on('connection', (socket) => {
 
       socket.on('ready', () => {
@@ -43,7 +58,9 @@ class MyService extends EventEmitter {
         const request = data.toString()
 
         //Method Check
-        this.checkMethod(request)
+        this.checkMethod(socket, request)
+        //Get Queries
+        this.requestQueries(socket, request)
         header(socket)
 
         //Client Close
