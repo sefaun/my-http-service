@@ -22,7 +22,10 @@ class MyService extends EventEmitter {
   requestQueries(request) {
     var query = {}
     const path = request.split(' ')[1].trim()
-    const queries = path.split('?')[1].split('&');
+    if (path === "/") {
+      return query
+    }
+    const queries = path.split('?')[1].split('&')
 
     for (const i of queries) {
       query[i.split('=')[0]] = i.split('=')[1]
@@ -31,7 +34,10 @@ class MyService extends EventEmitter {
   }
 
   requestBody(request) {
-    return JSON.parse(request.split('\r\n\r\n')[1])
+    if (request.split('\r\n\r\n')[1] !== "") {
+      return JSON.parse(request.split('\r\n\r\n')[1])
+    }
+    return {}
   }
 
   checkMethod(request) {
@@ -88,7 +94,6 @@ class MyService extends EventEmitter {
       socket.on('end', () => {
         console.log("someone get out !")
       })
-
 
       socket.on('error', (err) => {
         console.log(err)
