@@ -14,7 +14,7 @@ class MyService extends EventEmitter {
     var headers = {}
     const header = request.split('\r\n\r\n')[0].split('\r\n')
     for (let i = 1; i < header.length; i++) {
-      headers[header[i].trim().split(':')[0].replace('-', '_').toLowerCase()] = header[i].split(':')[1].replace(' ', '')
+      headers[header[i].trim().split(':')[0].replace('-', '_').toLowerCase()] = header[i].split(':')[1].replace(' ', '').toLowerCase()
     }
     return headers
   }
@@ -22,15 +22,18 @@ class MyService extends EventEmitter {
   requestQueries(request) {
     var query = {}
     const path = request.split(' ')[1].trim()
+    var emitPath = path.split('?')[0]
+
     if (path === "/") {
       return query
     }
     const queries = path.split('?')[1].split('&')
 
     for (const i of queries) {
+      emitPath += `/:${[i.split('=')[0]]}`
       query[i.split('=')[0]] = i.split('=')[1]
     }
-    return query
+    return { query: query, emitPath: emitPath }
   }
 
   requestBody(request) {
@@ -40,26 +43,39 @@ class MyService extends EventEmitter {
     return {}
   }
 
-  checkMethod(request) {
-    var method = ""
+  checkRequest(socket, request) {
+
+    socket.path = request.split(' ')[1].trim()
+    socket.header = this.requestHeader(request)
+
     switch (request.split(' ')[0]) {
       case 'GET':
-        method = 'GET'
+        socket.method = 'GET'
+        const queries = this.requestQueries(request)
+        socket.query = queries.query
+        socket.emitPath = queries.emitPath
+        socket.body = this.requestBody(request)
         break;
+
       case 'POST':
-        method = 'POST'
+        socket.method = 'POST'
+        socket.body = this.requestBody(request)
         break;
+
       case 'PUT':
-        method = 'PUT'
+        socket.method = 'PUT'
+        socket.body = this.requestBody(request)
         break;
+
       case 'DELETE':
-        method = 'DELETE'
+        socket.method = 'DELETE'
+        socket.body = this.requestBody(request)
         break;
 
       default:
+        socket.end()
         break;
     }
-    return method
   }
 
   createServer() {
@@ -70,37 +86,27 @@ class MyService extends EventEmitter {
       })
 
       socket.on('data', (data) => {
-        //console.log(data.toString())
-        const request = data.toString()
 
-        //Get Path
-        socket.path = request.split(' ')[1].trim()
-        //Method Check
-        socket.method = this.checkMethod(request)
-        //Get Header
-        socket.header = this.requestHeader(request)
-        //Get Queries
-        socket.query = this.requestQueries(request)
-        //Body Data
-        socket.body = this.requestBody(request)
+        //Request Check
+        this.checkRequest(socket, data.toString())
 
         this.emit(`${socket.method}`, socket, "evet")
       })
 
-      socket.on('close', (hadError) => {
-        console.log(hadError)
+      socket.on('end', (end) => {
+        console.log("end !", end)
       })
 
-      socket.on('end', () => {
-        console.log("someone get out !")
+      socket.on('close', (close) => {
+        console.log("close ->", close)
       })
 
-      socket.on('error', (err) => {
-        console.log(err)
+      socket.on('error', (error) => {
+        console.log(error)
+        socket.end()
       })
 
     })
-
     return this.server
   }
 
