@@ -1,6 +1,6 @@
 const my_service = require("./my-service")
 const server = my_service.createServer()
-require("./routes")
+
 
 const port = 5000
 

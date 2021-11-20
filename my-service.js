@@ -1,5 +1,7 @@
 const net = require('net')
 const EventEmitter = require('events')
+const moment = require('moment')
+const { status } = require('./src/status')
 
 
 class MyService extends EventEmitter {
@@ -8,6 +10,8 @@ class MyService extends EventEmitter {
     super(server)
 
     this.server = server
+    this.methods()
+    this.response()
   }
 
   requestHeader(request) {
@@ -44,38 +48,70 @@ class MyService extends EventEmitter {
   }
 
   checkRequest(socket, request) {
-
-    socket.path = request.split(' ')[1].trim()
-    socket.header = this.requestHeader(request)
-
+    var method = ""
     switch (request.split(' ')[0]) {
       case 'GET':
-        socket.method = 'GET'
-        const queries = this.requestQueries(request)
-        socket.query = queries.query
-        socket.emitPath = queries.emitPath
-        socket.body = this.requestBody(request)
+        method = 'GET'
         break;
-
       case 'POST':
-        socket.method = 'POST'
-        socket.body = this.requestBody(request)
+        method = 'POST'
         break;
-
       case 'PUT':
-        socket.method = 'PUT'
-        socket.body = this.requestBody(request)
+        method = 'PUT'
         break;
-
       case 'DELETE':
-        socket.method = 'DELETE'
-        socket.body = this.requestBody(request)
+        method = 'DELETE'
         break;
-
       default:
         socket.end()
         break;
     }
+    return method
+  }
+
+  methods() {
+    this.on('GET', (socket, request) => {
+      const queries = this.requestQueries(request)
+      socket.query = queries.query
+      socket.emitPath = queries.emitPath
+      socket.body = this.requestBody(request)
+      this.emit('response', socket)
+    })
+    this.on('POST', (socket, request) => {
+      socket.body = this.requestBody(request)
+      this.emit('response', socket)
+    })
+
+    this.on('PUT', (socket, request) => {
+      socket.body = this.requestBody(request)
+      this.emit('response', socket)
+    })
+
+    this.on('DELETE', (socket, request) => {
+      socket.body = this.requestBody(request)
+      this.emit('response', socket)
+    })
+  }
+
+  response() {
+
+    this.on('response', (socket) => {
+      socket.write(status(200))
+      socket.write('Server: nginx/1.18.0\r\n')
+      socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
+      socket.write('Content-Type: application/json; charset=utf-8\r\n')
+      socket.write('Content-Length: 17\r\n')
+      socket.write('Connection: keep-alive\r\n')
+      socket.write('X-Powered-By: Sefa\r\n')
+      socket.write('Content-Language: en\r\n')
+      socket.write('Access-Control-Allow-Origin: *\r\n')
+      socket.write('Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept, Authorization\r\n')
+      socket.write('\r\n')
+      socket.write('{"sefa":"sefa"}\r\n')
+      console.log(socket)
+      socket.end()
+    })
+
   }
 
   createServer() {
@@ -87,10 +123,14 @@ class MyService extends EventEmitter {
 
       socket.on('data', (data) => {
 
-        //Request Check
-        this.checkRequest(socket, data.toString())
+        const request = data.toString()
 
-        this.emit(`${socket.method}`, socket, "evet")
+        //Request Check
+        socket.path = request.split(' ')[1].trim()
+        socket.header = this.requestHeader(request)
+        socket.method = this.checkRequest(socket, request)
+        this.emit(socket.method, socket, request)
+
       })
 
       socket.on('end', (end) => {
@@ -102,7 +142,7 @@ class MyService extends EventEmitter {
       })
 
       socket.on('error', (error) => {
-        console.log(error)
+        console.log(error, "sefa")
         socket.end()
       })
 
