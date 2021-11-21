@@ -23,21 +23,24 @@ class MyService extends EventEmitter {
     return headers
   }
 
-  requestQueries(request) {
+  requestPath(request) {
     var query = {}
+    var routerPath = ""
     const path = request.split(' ')[1].trim()
-    var emitPath = path.split('?')[0]
 
-    if (path === "/") {
-      return query
+    if (request.split(' ')[0].trim() === 'GET') {
+      if (path.indexOf("?") != -1 || path.indexOf("&") != -1) {
+        const queries = path.split('?')[1].split('&')
+        routerPath = path.split('?')[0]
+        for (const i of queries) {
+          routerPath += `/:${[i.split('=')[0]]}`
+          query[i.split('=')[0]] = i.split('=')[1]
+        }
+        return { query: query, routerPath: routerPath }
+      }
+      return { query: query, routerPath: path }
     }
-    const queries = path.split('?')[1].split('&')
-
-    for (const i of queries) {
-      emitPath += `/:${[i.split('=')[0]]}`
-      query[i.split('=')[0]] = i.split('=')[1]
-    }
-    return { query: query, emitPath: emitPath }
+    return { query: query, routerPath: path }
   }
 
   requestBody(request) {
@@ -69,26 +72,30 @@ class MyService extends EventEmitter {
     return method
   }
 
+  responseContent() {
+    return {
+      statusCode: (code) => status(code),
+      origin: "Access-Control-Allow-Origin: *",
+      content_type: "Content-Type: application/json; charset=utf-8",
+      keep_alive: "Connection: keep-alive",
+      access_control: "Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept",
+      data: {}
+    }
+  }
+
   methods() {
     this.on('GET', (socket, request) => {
-      const queries = this.requestQueries(request)
-      socket.query = queries.query
-      socket.emitPath = queries.emitPath
-      socket.body = this.requestBody(request)
       this.emit('response', socket)
     })
     this.on('POST', (socket, request) => {
-      socket.body = this.requestBody(request)
       this.emit('response', socket)
     })
 
     this.on('PUT', (socket, request) => {
-      socket.body = this.requestBody(request)
       this.emit('response', socket)
     })
 
     this.on('DELETE', (socket, request) => {
-      socket.body = this.requestBody(request)
       this.emit('response', socket)
     })
   }
@@ -114,6 +121,17 @@ class MyService extends EventEmitter {
 
   }
 
+  allActivities(socket, request) {
+    socket.path = request.split(' ')[1].trim()
+    socket.header = this.requestHeader(request)
+    socket.method = this.checkRequest(socket, request)
+    const path = this.requestPath(request)
+    socket.query = path.query
+    socket.routerPath = path.routerPath
+    socket.body = this.requestBody(request)
+    this.emit(socket.method, socket, socket.res)
+  }
+
   createServer() {
     this.server.on('connection', (socket) => {
 
@@ -122,15 +140,7 @@ class MyService extends EventEmitter {
       })
 
       socket.on('data', (data) => {
-
-        const request = data.toString()
-
-        //Request Check
-        socket.path = request.split(' ')[1].trim()
-        socket.header = this.requestHeader(request)
-        socket.method = this.checkRequest(socket, request)
-        this.emit(socket.method, socket, request)
-
+        this.allActivities(socket, data.toString())
       })
 
       socket.on('end', (end) => {
