@@ -2,6 +2,8 @@ const net = require('net')
 const EventEmitter = require('events')
 const moment = require('moment')
 const { status } = require('./src/status')
+const routers = require('./routers')
+const pipeline_worker = require('./src/middleware')
 
 
 class MyService extends EventEmitter {
@@ -10,8 +12,6 @@ class MyService extends EventEmitter {
     super(server)
 
     this.server = server
-    this.methods()
-    this.response()
   }
 
   requestHeader(request) {
@@ -83,53 +83,65 @@ class MyService extends EventEmitter {
     }
   }
 
-  methods() {
-    this.on('GET', (socket, request) => {
-      this.emit('response', socket)
-    })
-    this.on('POST', (socket, request) => {
-      this.emit('response', socket)
-    })
-
-    this.on('PUT', (socket, request) => {
-      this.emit('response', socket)
-    })
-
-    this.on('DELETE', (socket, request) => {
-      this.emit('response', socket)
-    })
-  }
-
   response() {
-
-    this.on('response', (socket) => {
-      socket.write(status(200))
-      socket.write('Server: nginx/1.18.0\r\n')
-      socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
-      socket.write('Content-Type: application/json; charset=utf-8\r\n')
-      socket.write('Content-Length: 17\r\n')
-      socket.write('Connection: keep-alive\r\n')
-      socket.write('X-Powered-By: Sefa\r\n')
-      socket.write('Content-Language: en\r\n')
-      socket.write('Access-Control-Allow-Origin: *\r\n')
-      socket.write('Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept, Authorization\r\n')
-      socket.write('\r\n')
-      socket.write('{"sefa":"sefa"}\r\n')
-      console.log(socket)
-      socket.end()
-    })
-
+    socket.write(status(200))
+    socket.write('Server: nginx/1.18.0\r\n')
+    socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
+    socket.write('Content-Type: application/json; charset=utf-8\r\n')
+    socket.write('Content-Length: 17\r\n')
+    socket.write('Connection: keep-alive\r\n')
+    socket.write('X-Powered-By: Sefa\r\n')
+    socket.write('Content-Language: en\r\n')
+    socket.write('Access-Control-Allow-Origin: *\r\n')
+    socket.write('Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept, Authorization\r\n')
+    socket.write('\r\n')
+    socket.write('{"sefa":"sefa"}\r\n')
   }
 
   allActivities(socket, request) {
-    socket.path = request.split(' ')[1].trim()
-    socket.header = this.requestHeader(request)
-    socket.method = this.checkRequest(socket, request)
-    const path = this.requestPath(request)
-    socket.query = path.query
-    socket.routerPath = path.routerPath
-    socket.body = this.requestBody(request)
-    this.emit(socket.method, socket, socket.res)
+    try {
+
+      socket.path = request.split(' ')[1].trim()
+      socket.header = this.requestHeader(request)
+      socket.method = this.checkRequest(socket, request)
+      const path = this.requestPath(request)
+      socket.query = path.query
+      socket.routerPath = path.routerPath
+      socket.body = this.requestBody(request)
+
+      var routerOperations = {}
+      for (const items of routers.routerMemory) {
+        if (items.path === socket.routerPath && items.method === socket.method) {
+          routerOperations = items
+          break
+        }
+      }
+
+      if (Object.keys(routerOperations).length === 0) {
+        throw new Error("Router or Method not Found !")
+      }
+
+      socket.res = {}
+      pipeline_worker(...routerOperations.functions)(socket, socket.res)
+      socket.end()
+    } catch (err) {
+      this.notFoundResponse(socket)
+      socket.end()
+    }
+  }
+
+  notFoundResponse(socket) {
+    socket.write(status(404))
+    socket.write('Server: nginx/1.18.0\r\n')
+    socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
+    socket.write('Content-Type: application/json; charset=utf-8\r\n')
+    socket.write('Content-Length: 17\r\n')
+    socket.write('Connection: keep-alive\r\n')
+    socket.write('X-Powered-By: Sefa\r\n')
+    socket.write('Access-Control-Allow-Origin: *\r\n')
+    socket.write('Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept\r\n')
+    socket.write('\r\n')
+    socket.write('{"not":"found"}\r\n')
   }
 
   createServer() {
