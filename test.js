@@ -1,31 +1,18 @@
-const moment = require("moment")
 const my_service = require("./my-service")
 const server = my_service.createServer()
-const router = require("./routers")
+const router = require("./src/routers")
 
 function sefaOne(req, res, next) {
-  console.log("res -> ", res.json(), next)
-  console.log("sefaOne Burda")
   next()
 }
 
-function sefaTwo(socket, res) {
-  console.log("sefaTwo Burda")
-  socket.write(`HTTP/1.1 ${200} OK\r\n`)
-  socket.write('Server: nginx/1.18.0\r\n')
-  socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
-  socket.write('Content-Type: application/json; charset=utf-8\r\n')
-  socket.write('Content-Length: 17\r\n')
-  socket.write('Connection: keep-alive\r\n')
-  socket.write('X-Powered-By: Sefa\r\n')
-  socket.write('Content-Language: en\r\n')
-  socket.write('Access-Control-Allow-Origin: *\r\n')
-  socket.write('Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept, Authorization\r\n')
-  socket.write('\r\n')
-  socket.write('{"sefa":"sefa"}\r\n')
+function sefaTwo(req, res) {
+  res.header("sefa-header")
+  res.json(req.query)
+  res.status(200)
 }
 
-router.get("/sefa/get", sefaOne, sefaTwo)
+router.get("/sefa/get/:sefa", sefaOne, sefaTwo)
 router.post("/sefa/post", sefaOne, sefaTwo)
 router.put("/sefa/put", sefaOne, sefaTwo)
 router.delete("/sefa/delete", sefaOne, sefaTwo)
