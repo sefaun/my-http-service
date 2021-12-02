@@ -2,17 +2,16 @@ const moment = require("moment")
 const my_service = require("./my-service")
 const server = my_service.createServer()
 const router = require("./routers")
-const { status } = require("./src/status")
 
 function sefaOne(req, res, next) {
-  console.log("res -> ", res, next)
+  console.log("res -> ", res.json(), next)
   console.log("sefaOne Burda")
   next()
 }
 
 function sefaTwo(socket, res) {
   console.log("sefaTwo Burda")
-  socket.write(status(200))
+  socket.write(`HTTP/1.1 ${200} OK\r\n`)
   socket.write('Server: nginx/1.18.0\r\n')
   socket.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
   socket.write('Content-Type: application/json; charset=utf-8\r\n')
