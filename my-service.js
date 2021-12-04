@@ -5,7 +5,6 @@ const routers = require('./src/routers')
 const response = require("./src/response")
 const pipeline_worker = require('./src/middleware')
 const httpStatus = require('./data/httpStatus.json')
-const fs = require("fs")
 
 class MyService extends EventEmitter {
 
