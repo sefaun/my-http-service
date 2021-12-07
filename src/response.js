@@ -8,7 +8,11 @@ class ResponseSettings {
 
   status(status) {
     if (typeof status === "number") {
-      this.responseData.responseStatus = `HTTP/1.1 ${status} ${httpStatus[status]}`
+      if (httpStatus[status] === undefined) {
+        this.responseData.responseStatus = `HTTP/1.1 ${200} ${httpStatus[200]}`
+      } else {
+        this.responseData.responseStatus = `HTTP/1.1 ${status} ${httpStatus[status]}`
+      }
     } else {
       this.responseData.responseStatus = `HTTP/1.1 ${200} ${httpStatus[200]}`
     }
