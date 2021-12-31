@@ -20,7 +20,7 @@ class ResponseSettings {
 
   header(data) {
     var headerDatas = []
-    if (typeof data === "object" && data.length !== undefined && Array.isArray(data) === false) {
+    if (typeof data === "object" && Object.keys(data).length && Array.isArray(data) === false) {
       Object.entries(data).forEach(([key, value]) => {
         headerDatas.push({ [key]: typeof value === "string" ? "'" + value + "'" : value })
       })
@@ -38,4 +38,4 @@ class ResponseSettings {
 
 }
 
-module.exports = new ResponseSettings()
+module.exports = ResponseSettings

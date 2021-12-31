@@ -12,8 +12,14 @@ function sefaTwo(req, res) {
   res.status(200)
 }
 
+function sefaThree(req, res) {
+  res.header({ "sefa-body": 10 })
+  res.json(req.body)
+  res.status(200)
+}
+
 router.get("/sefa/get/:sefa", sefaOne, sefaTwo)
-router.post("/sefa/post", sefaOne, sefaTwo)
+router.post("/sefa/post", sefaOne, sefaThree)
 router.put("/sefa/put", sefaOne, sefaTwo)
 router.delete("/sefa/delete", sefaOne, sefaTwo)
 

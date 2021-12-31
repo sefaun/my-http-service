@@ -1,10 +1,11 @@
 const net = require('net')
 const EventEmitter = require('events')
 const moment = require('moment')
+
 const routers = require('./src/routers')
-const response = require("./src/response")
 const pipeline_worker = require('./src/middleware')
 const httpStatus = require('./data/httpStatus.json')
+const ResponseSettings = require('./src/response')
 
 class MyService extends EventEmitter {
 
@@ -127,7 +128,7 @@ class MyService extends EventEmitter {
         throw new Error()
       }
 
-      socket.res = response
+      socket.res = new ResponseSettings()
 
       //User Functions
       pipeline_worker(...routerOperations.functions)(socket, socket.res)
