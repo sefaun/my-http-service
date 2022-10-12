@@ -2,15 +2,18 @@
   "name": "my-service",
   "version": "1.0.0",
   "description": "\"http-service\"",
-  "main": "test.js",
+  "main": "./build/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon test.js"
+    "start": "nodemon --watch \"./**\"  --ext \"ts,json\" --exec \"ts-node index.ts\"",
+    "build": "tsc"
   },
   "author": "SEFA UN",
   "license": "ISC",
   "dependencies": {
-    "moment": "^2.29.1",
-    "nodemon": "^2.0.15"
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^18.8.4",
+    "@types/uuid": "^8.3.4"
   }
 }
