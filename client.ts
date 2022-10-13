@@ -58,9 +58,17 @@ export class Client {
 
       //For Body
       if (request_header_flag === true && request_body_flag === false) {
-        request_body_flag = true
-        this.request.body = request_data.split(this.MULTI_COMMAND_SEPERATOR)[1]
-        request_data = ""
+        if (this.request.method === METHODS.GET) {
+          this.request.body = ""
+          request_body_flag = true
+          request_data = ""
+        } else {
+          this.request.body = request_data.split(this.MULTI_COMMAND_SEPERATOR)[1]
+          if (this.request.body.includes(this.COMMAND_SEPERATOR) === true) {
+            request_body_flag = true
+            request_data = ""
+          }
+        }
       }
     })
   }
@@ -69,7 +77,6 @@ export class Client {
     const header_items = this.request.header.split(this.COMMAND_SEPERATOR)
 
     for (let i = 0; i < header_items.length; i++) {
-
       if (i === 0) {
         this.fetchRequestMethod(header_items[i])
         this.fetchRequestPath(header_items[i])
