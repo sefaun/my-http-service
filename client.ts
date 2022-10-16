@@ -37,7 +37,7 @@ export class Client {
     this.createClient()
   }
 
-  private createClient = (): void => {
+  private createClient(): void {
     var request_data: string = ""
     var request_header_flag: boolean = false
     var request_body_flag: boolean = false
@@ -73,7 +73,7 @@ export class Client {
     })
   }
 
-  private fetchRequestHeader = (): void => {
+  private fetchRequestHeader(): void {
     const header_items = this.request.header.split(this.COMMAND_SEPERATOR)
 
     for (let i = 0; i < header_items.length; i++) {
@@ -89,25 +89,25 @@ export class Client {
     }
   }
 
-  private fetchRequestMethod = (data: string): void => {
+  private fetchRequestMethod(data: string): void {
     this.checkMethod(data.split(' ')[0])
   }
 
-  private fetchRequestPath = (data: string): void => {
+  private fetchRequestPath(data: string): void {
     this.request.path = data.split(' ')[1]
   }
 
-  private fetchRequestProtocolVersion = (data: string): void => {
+  private fetchRequestProtocolVersion(data: string): void {
     this.request.protocol_version = data.split(' ')[2]
   }
 
-  private clientEnd = (): void => {
+  private clientEnd(): void {
     this.client.end()
     //Clear Class
     this.that.deleteClientClass(this.client_id)
   }
 
-  private checkMethod = (method: string): void => {
+  private checkMethod(method: string): void {
     switch (method) {
       case METHODS.GET:
         break;
@@ -125,11 +125,11 @@ export class Client {
   }
 
   /***********************Public***********************/
-  public use = (packet: any): void => {
+  public use(packet: any): void {
 
   }
 
-  public bodyJSON = (): void => {
+  public bodyJSON(): void {
     try {
       this.request.body = JSON.parse(this.request.body)
     } catch (error) { }

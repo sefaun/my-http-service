@@ -6,17 +6,20 @@ import { Client } from "./client"
 
 export class MyService {
 
-  clients: Record<string, Client> = {}
+  private clients: Record<string, Client> = {}
+  public serverHandler: any
 
-  serverHandler = (client: Socket) => {
-    const client_id = uuidv4()
+  constructor() {
+    const that = this
 
-    const client_class = new Client(this, client, client_id)
-
-    this.clients[client_id] = client_class
+    this.serverHandler = function serverHandler(client: Socket) {
+      const client_id = uuidv4()
+      const client_class = new Client(that, client, client_id)
+      that.clients[client_id] = client_class
+    }
   }
 
-  deleteClientClass = (client_id: string) => {
+  deleteClientClass(client_id: string) {
     delete this.clients[client_id]
   }
 
