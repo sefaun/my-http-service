@@ -8,14 +8,14 @@ export function middleware(...[]: Iterable<Function>): any {
     throw new Error("There is no any argument functions.")
   }
 
-  for (let i = 1; i < stacks.length; i++) {
+  for (let i = 0; i < stacks.length; i++) {
     if (typeof stacks[i] !== "function") {
       throw new Error(`Arguments ${i + 1} is not a Function. All arguments have to be a Function.`)
     }
   }
 
   return async function () {
-    var arg = 1
+    var arg = 0
     var next_old_parameters = []
     const params = slice.call(arguments)
 

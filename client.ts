@@ -1,29 +1,14 @@
 import { Socket } from "net"
-import { MyService } from "./index"
-
-class Request {
-  method: string
-  path: string
-  protocol_version: string
-  header: string
-  body: string
-  body_length: number
-  header_datas: Record<string, string>[]
-}
-
-const METHODS = {
-  GET: "GET",
-  POST: "POST",
-  PUT: "PUT",
-  DELETE: "DELETE"
-}
+import { METHODS, seperators } from "./src/data/enums"
+import { MyHTTPService } from "./index"
+import { middleware } from "./src/middleware"
+import { MyHTTPServiceResponse } from "./src/myhttpservice-response"
+import { routes } from "./src/myhttpservice-router"
+import { MyHTTPServiceResponseData, Request } from "./src/data/types"
 
 export class Client {
 
-  COMMAND_SEPERATOR: string = "\r\n"
-  MULTI_COMMAND_SEPERATOR: string = "\r\n\r\n"
-
-  request = {
+  private request = {
     method: "",
     path: "",
     protocol_version: "",
@@ -33,7 +18,7 @@ export class Client {
     header_datas: []
   } as Request
 
-  constructor(private that: MyService, private client: Socket, private client_id: string) {
+  constructor(private that: MyHTTPService, private client: Socket, private client_id: string) {
     this.createClient()
   }
 
@@ -41,6 +26,14 @@ export class Client {
     var request_data: string = ""
     var request_header_flag: boolean = false
     var request_body_flag: boolean = false
+
+    this.client.on("error", (_err: Error) => {
+      this.that.deleteClientClass(this.client_id)
+    })
+
+    this.client.on("end", () => {
+      this.that.deleteClientClass(this.client_id)
+    })
 
     this.client.on('data', (data: Buffer) => {
       request_data += data.toString()
@@ -50,9 +43,9 @@ export class Client {
       }
 
       //For Header
-      if (request_data.split(this.MULTI_COMMAND_SEPERATOR)[1].length && request_header_flag === false) {
+      if (request_data.split(seperators.MULTI_COMMAND_SEPERATOR)[1].length && request_header_flag === false) {
         request_header_flag = true
-        this.request.header = request_data.split(this.MULTI_COMMAND_SEPERATOR)[0]
+        this.request.header = request_data.split(seperators.MULTI_COMMAND_SEPERATOR)[0]
         this.fetchRequestHeader()
       }
 
@@ -63,18 +56,54 @@ export class Client {
           request_body_flag = true
           request_data = ""
         } else {
-          this.request.body = request_data.split(this.MULTI_COMMAND_SEPERATOR)[1]
-          if (this.request.body.includes(this.COMMAND_SEPERATOR) === true) {
+          this.request.body = request_data.split(seperators.MULTI_COMMAND_SEPERATOR)[1]
+          if (this.request.body.includes(seperators.COMMAND_SEPERATOR) === true) {
             request_body_flag = true
             request_data = ""
           }
         }
+
+        this.fetchingRouters()
       }
     })
   }
 
+  prepareAndSendClientAnswer(response_data: MyHTTPServiceResponseData) {
+    let answer_data = ''
+
+    //Header
+    answer_data += `HTTP/1.1 ${response_data.status_code} ${response_data.status_code_explanation}${seperators.COMMAND_SEPERATOR}`
+    answer_data += `Server: MyHTTPService${seperators.COMMAND_SEPERATOR}`
+    answer_data += `Content-Type: application/json; charset=utf-8${seperators.COMMAND_SEPERATOR}`
+    answer_data += response_data.body_length > 0 ? `Content-Length: ${response_data.body_length}${seperators.COMMAND_SEPERATOR}` : ''
+    answer_data += `Connection: keep-alive${seperators.COMMAND_SEPERATOR}`
+    answer_data += `X-Powered-By: SefaUN${seperators.COMMAND_SEPERATOR}`
+    answer_data += `Access-Control-Allow-Origin: *${seperators.COMMAND_SEPERATOR}`
+    answer_data += `Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept${seperators.COMMAND_SEPERATOR}`
+    //Body
+    answer_data += seperators.COMMAND_SEPERATOR
+    answer_data += `${JSON.stringify(response_data.body)}${seperators.COMMAND_SEPERATOR}`
+    //this.client.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
+
+    this.client.write(answer_data)
+    this.client.end()
+  }
+
+  private async fetchingRouters() {
+    const myhttpservice_response = new MyHTTPServiceResponse()
+    let middleware_functions: Function[] = []
+    //Use Functions
+    for (const route of routes.routers) {
+      middleware_functions.push(...route.functions)
+    }
+    await middleware(...middleware_functions)(this.client, myhttpservice_response)
+    //Send Answer
+    this.prepareAndSendClientAnswer(myhttpservice_response.response_data)
+    this.that.deleteClientClass(this.client_id)
+  }
+
   private fetchRequestHeader(): void {
-    const header_items = this.request.header.split(this.COMMAND_SEPERATOR)
+    const header_items = this.request.header.split(seperators.COMMAND_SEPERATOR)
 
     for (let i = 0; i < header_items.length; i++) {
       if (i === 0) {
@@ -125,10 +154,6 @@ export class Client {
   }
 
   /***********************Public***********************/
-  public use(packet: any): void {
-
-  }
-
   public bodyJSON(): void {
     try {
       this.request.body = JSON.parse(this.request.body)

@@ -1,15 +1,10 @@
-type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE'
+import { RouterPayload } from "./data/types"
 
-type RouterPayload = {
-  method?: Methods
-  path?: string
-  functions: Function[]
-}
 
-export class Router {
+class MyHTTPServiceRouter {
 
   private slicer = Array.prototype.slice
-  private routers: RouterPayload[]
+  public routers: RouterPayload[] = []
 
   public get() {
     this.routers.push({
@@ -50,3 +45,5 @@ export class Router {
   }
 
 }
+
+export const routes = new MyHTTPServiceRouter()

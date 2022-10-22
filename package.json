@@ -1,7 +1,7 @@
 {
-  "name": "my-service",
+  "name": "my-http-service",
   "version": "1.0.0",
-  "description": "\"http-service\"",
+  "description": "Demo HTTP Server",
   "main": "./build/index.js",
   "scripts": {
     "start": "nodemon --watch \"./**\"  --ext \"ts,json\" --exec \"ts-node index.ts\"",
