@@ -22,7 +22,7 @@ function middleware(...[]) {
             throw new Error(`Arguments ${i + 1} is not a Function. All arguments have to be a Function.`);
         }
     }
-    return function () {
+    return function (...[]) {
         return __awaiter(this, arguments, void 0, function* () {
             var arg = 0;
             var next_old_parameters = [];

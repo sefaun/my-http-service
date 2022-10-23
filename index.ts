@@ -1,6 +1,7 @@
 import { Socket } from "net"
 import { v4 as uuidv4 } from "uuid"
 import { Client } from "./client"
+import { ServerOptions } from "./src/data/types"
 
 
 export class MyHTTPService {
@@ -9,16 +10,19 @@ export class MyHTTPService {
   public serverHandler: Function
 
   constructor() {
-    const that = this
+    var that = this
+    var client_options = {
+      client_id: ''
+    } as ServerOptions
 
-    this.serverHandler = function serverHandler(client: Socket) {
-      const client_id = uuidv4()
-      const client_class = new Client(that, client, client_id)
-      that.clients[client_id] = client_class
+    this.serverHandler = function serverHandler(client: Socket): void {
+      client_options.client_id = uuidv4()
+      const client_class = new Client(that, client, client_options)
+      that.clients[client_options.client_id] = client_class
     }
   }
 
-  deleteClientClass(client_id: string) {
+  deleteClientClass(client_id: string): void {
     delete this.clients[client_id]
   }
 

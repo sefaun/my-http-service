@@ -1,1 +1,1 @@
-export declare function middleware(...[]: Iterable<Function>): any;
+export declare function middleware(...[]: Iterable<Function>): Function;

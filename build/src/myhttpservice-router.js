@@ -1,36 +1,37 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.routes = void 0;
+const enums_1 = require("./data/enums");
 class MyHTTPServiceRouter {
     constructor() {
         this.slicer = Array.prototype.slice;
         this.routers = [];
     }
-    get() {
+    get(path, ...[]) {
         this.routers.push({
-            method: "GET",
-            path: this.slicer.call(arguments)[0],
+            method: enums_1.METHODS.GET,
+            path: path,
             functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
         });
     }
-    post() {
+    post(path, ...[]) {
         this.routers.push({
-            method: "POST",
-            path: this.slicer.call(arguments)[0],
+            method: enums_1.METHODS.POST,
+            path: path,
             functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
         });
     }
-    put() {
+    put(path, ...[]) {
         this.routers.push({
-            method: "PUT",
-            path: this.slicer.call(arguments)[0],
+            method: enums_1.METHODS.PUT,
+            path: path,
             functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
         });
     }
-    delete() {
+    delete(path, ...[]) {
         this.routers.push({
-            method: "DELETE",
-            path: this.slicer.call(arguments)[0],
+            method: enums_1.METHODS.DELETE,
+            path: path,
             functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
         });
     }

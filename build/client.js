@@ -15,10 +15,10 @@ const middleware_1 = require("./src/middleware");
 const myhttpservice_response_1 = require("./src/myhttpservice-response");
 const myhttpservice_router_1 = require("./src/myhttpservice-router");
 class Client {
-    constructor(that, client, client_id) {
+    constructor(that, client, options) {
         this.that = that;
         this.client = client;
-        this.client_id = client_id;
+        this.options = options;
         this.request = {
             method: "",
             path: "",
@@ -34,12 +34,8 @@ class Client {
         var request_data = "";
         var request_header_flag = false;
         var request_body_flag = false;
-        this.client.on("error", (_err) => {
-            this.that.deleteClientClass(this.client_id);
-        });
-        this.client.on("end", () => {
-            this.that.deleteClientClass(this.client_id);
-        });
+        this.client.on("error", (_err) => this.that.deleteClientClass(this.options.client_id));
+        this.client.on("end", () => this.that.deleteClientClass(this.options.client_id));
         this.client.on('data', (data) => {
             request_data += data.toString();
             if (request_header_flag === true && request_body_flag === true && request_data === "") {
@@ -78,14 +74,15 @@ class Client {
         answer_data += response_data.body_length > 0 ? `Content-Length: ${response_data.body_length}${enums_1.seperators.COMMAND_SEPERATOR}` : '';
         answer_data += `Connection: keep-alive${enums_1.seperators.COMMAND_SEPERATOR}`;
         answer_data += `X-Powered-By: SefaUN${enums_1.seperators.COMMAND_SEPERATOR}`;
+        answer_data += `${response_data.headers}`;
         answer_data += `Access-Control-Allow-Origin: *${enums_1.seperators.COMMAND_SEPERATOR}`;
         answer_data += `Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept${enums_1.seperators.COMMAND_SEPERATOR}`;
         //Body
         answer_data += enums_1.seperators.COMMAND_SEPERATOR;
         answer_data += `${JSON.stringify(response_data.body)}${enums_1.seperators.COMMAND_SEPERATOR}`;
         //this.client.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
-        this.client.write(answer_data);
-        this.client.end();
+        this.sendMessageToClient(answer_data);
+        this.clientEnd();
     }
     fetchingRouters() {
         return __awaiter(this, void 0, void 0, function* () {
@@ -98,7 +95,7 @@ class Client {
             yield (0, middleware_1.middleware)(...middleware_functions)(this.client, myhttpservice_response);
             //Send Answer
             this.prepareAndSendClientAnswer(myhttpservice_response.response_data);
-            this.that.deleteClientClass(this.client_id);
+            this.that.deleteClientClass(this.options.client_id);
         });
     }
     fetchRequestHeader() {
@@ -124,9 +121,14 @@ class Client {
         this.request.protocol_version = data.split(' ')[2];
     }
     clientEnd() {
+        //End Client
         this.client.end();
         //Clear Class
-        this.that.deleteClientClass(this.client_id);
+        this.that.deleteClientClass(this.options.client_id);
+    }
+    sendMessageToClient(data) {
+        //Send Message to Client
+        this.client.write(data);
     }
     checkMethod(method) {
         switch (method) {
@@ -143,13 +145,6 @@ class Client {
                 return;
         }
         this.request.method = method;
-    }
-    /***********************Public***********************/
-    bodyJSON() {
-        try {
-            this.request.body = JSON.parse(this.request.body);
-        }
-        catch (error) { }
     }
 }
 exports.Client = Client;

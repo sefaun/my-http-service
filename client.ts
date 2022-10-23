@@ -4,7 +4,8 @@ import { MyHTTPService } from "./index"
 import { middleware } from "./src/middleware"
 import { MyHTTPServiceResponse } from "./src/myhttpservice-response"
 import { routes } from "./src/myhttpservice-router"
-import { MyHTTPServiceResponseData, Request } from "./src/data/types"
+import { MyHTTPServiceResponseData, Request, ServerOptions } from "./src/data/types"
+
 
 export class Client {
 
@@ -18,7 +19,7 @@ export class Client {
     header_datas: []
   } as Request
 
-  constructor(private that: MyHTTPService, private client: Socket, private client_id: string) {
+  constructor(private that: MyHTTPService, private client: Socket, private options: ServerOptions) {
     this.createClient()
   }
 
@@ -27,14 +28,8 @@ export class Client {
     var request_header_flag: boolean = false
     var request_body_flag: boolean = false
 
-    this.client.on("error", (_err: Error) => {
-      this.that.deleteClientClass(this.client_id)
-    })
-
-    this.client.on("end", () => {
-      this.that.deleteClientClass(this.client_id)
-    })
-
+    this.client.on("error", (_err: Error) => this.that.deleteClientClass(this.options.client_id))
+    this.client.on("end", () => this.that.deleteClientClass(this.options.client_id))
     this.client.on('data', (data: Buffer) => {
       request_data += data.toString()
 
@@ -68,7 +63,7 @@ export class Client {
     })
   }
 
-  prepareAndSendClientAnswer(response_data: MyHTTPServiceResponseData) {
+  prepareAndSendClientAnswer(response_data: MyHTTPServiceResponseData): void {
     let answer_data = ''
 
     //Header
@@ -78,6 +73,7 @@ export class Client {
     answer_data += response_data.body_length > 0 ? `Content-Length: ${response_data.body_length}${seperators.COMMAND_SEPERATOR}` : ''
     answer_data += `Connection: keep-alive${seperators.COMMAND_SEPERATOR}`
     answer_data += `X-Powered-By: SefaUN${seperators.COMMAND_SEPERATOR}`
+    answer_data += `${response_data.headers}`
     answer_data += `Access-Control-Allow-Origin: *${seperators.COMMAND_SEPERATOR}`
     answer_data += `Access-Control-Allow-Headers: Origin, X-socketuested-With, Content-Type, Accept${seperators.COMMAND_SEPERATOR}`
     //Body
@@ -85,11 +81,11 @@ export class Client {
     answer_data += `${JSON.stringify(response_data.body)}${seperators.COMMAND_SEPERATOR}`
     //this.client.write(`Date: ${moment().format("ddd, DD MMM YYYY HH:mm:ss")} GMT\r\n`)
 
-    this.client.write(answer_data)
-    this.client.end()
+    this.sendMessageToClient(answer_data)
+    this.clientEnd()
   }
 
-  private async fetchingRouters() {
+  private async fetchingRouters(): Promise<void> {
     const myhttpservice_response = new MyHTTPServiceResponse()
     let middleware_functions: Function[] = []
     //Use Functions
@@ -99,7 +95,7 @@ export class Client {
     await middleware(...middleware_functions)(this.client, myhttpservice_response)
     //Send Answer
     this.prepareAndSendClientAnswer(myhttpservice_response.response_data)
-    this.that.deleteClientClass(this.client_id)
+    this.that.deleteClientClass(this.options.client_id)
   }
 
   private fetchRequestHeader(): void {
@@ -131,9 +127,15 @@ export class Client {
   }
 
   private clientEnd(): void {
+    //End Client
     this.client.end()
     //Clear Class
-    this.that.deleteClientClass(this.client_id)
+    this.that.deleteClientClass(this.options.client_id)
+  }
+
+  private sendMessageToClient(data: string): void {
+    //Send Message to Client
+    this.client.write(data)
   }
 
   private checkMethod(method: string): void {
@@ -153,10 +155,4 @@ export class Client {
     this.request.method = method
   }
 
-  /***********************Public***********************/
-  public bodyJSON(): void {
-    try {
-      this.request.body = JSON.parse(this.request.body)
-    } catch (error) { }
-  }
 }

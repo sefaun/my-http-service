@@ -1,3 +1,4 @@
+import { METHODS } from "./data/enums"
 import { RouterPayload } from "./data/types"
 
 
@@ -6,34 +7,34 @@ class MyHTTPServiceRouter {
   private slicer = Array.prototype.slice
   public routers: RouterPayload[] = []
 
-  public get() {
+  public get(path: string, ...[]: Iterable<Function>) {
     this.routers.push({
-      method: "GET",
-      path: this.slicer.call(arguments)[0],
+      method: METHODS.GET,
+      path: path,
       functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
     })
   }
 
-  public post() {
+  public post(path: string, ...[]: Iterable<Function>) {
     this.routers.push({
-      method: "POST",
-      path: this.slicer.call(arguments)[0],
+      method: METHODS.POST,
+      path: path,
       functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
     })
   }
 
-  public put() {
+  public put(path: string, ...[]: Iterable<Function>) {
     this.routers.push({
-      method: "PUT",
-      path: this.slicer.call(arguments)[0],
+      method: METHODS.PUT,
+      path: path,
       functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
     })
   }
 
-  public delete() {
+  public delete(path: string, ...[]: Iterable<Function>) {
     this.routers.push({
-      method: "DELETE",
-      path: this.slicer.call(arguments)[0],
+      method: METHODS.DELETE,
+      path: path,
       functions: this.slicer.call(arguments).slice(1, this.slicer.call(arguments).length)
     })
   }

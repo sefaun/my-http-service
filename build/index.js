@@ -6,11 +6,14 @@ const client_1 = require("./client");
 class MyHTTPService {
     constructor() {
         this.clients = {};
-        const that = this;
+        var that = this;
+        var client_options = {
+            client_id: ''
+        };
         this.serverHandler = function serverHandler(client) {
-            const client_id = (0, uuid_1.v4)();
-            const client_class = new client_1.Client(that, client, client_id);
-            that.clients[client_id] = client_class;
+            client_options.client_id = (0, uuid_1.v4)();
+            const client_class = new client_1.Client(that, client, client_options);
+            that.clients[client_options.client_id] = client_class;
         };
     }
     deleteClientClass(client_id) {

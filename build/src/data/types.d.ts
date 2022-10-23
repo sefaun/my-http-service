@@ -16,8 +16,11 @@ export declare class MyHTTPServiceResponseData {
 }
 declare type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE';
 export declare class RouterPayload {
-    method?: Methods;
+    method?: Methods | string;
     path?: string;
     functions: Function[];
+}
+export declare class ServerOptions {
+    client_id: string;
 }
 export {};

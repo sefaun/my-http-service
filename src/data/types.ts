@@ -19,7 +19,11 @@ export class MyHTTPServiceResponseData {
 type Methods = 'GET' | 'POST' | 'PUT' | 'DELETE'
 
 export class RouterPayload {
-  method?: Methods
+  method?: Methods | string
   path?: string
   functions: Function[]
+}
+
+export class ServerOptions {
+  client_id: string
 }

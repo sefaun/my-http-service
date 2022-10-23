@@ -3,6 +3,7 @@ const { MyHTTPService } = require("./build/index")
 const { routes } = require("./build/src/myhttpservice-router")
 
 const my_service = new MyHTTPService()
+//routes.use(my_service.json())
 const server = net.createServer(my_service.serverHandler)
 
 function sefaOne(req, res, next) {

@@ -1,13 +1,13 @@
 /// <reference types="node" />
 import { Socket } from "net";
 import { MyHTTPService } from "./index";
-import { MyHTTPServiceResponseData } from "./src/data/types";
+import { MyHTTPServiceResponseData, ServerOptions } from "./src/data/types";
 export declare class Client {
     private that;
     private client;
-    private client_id;
+    private options;
     private request;
-    constructor(that: MyHTTPService, client: Socket, client_id: string);
+    constructor(that: MyHTTPService, client: Socket, options: ServerOptions);
     private createClient;
     prepareAndSendClientAnswer(response_data: MyHTTPServiceResponseData): void;
     private fetchingRouters;
@@ -16,7 +16,6 @@ export declare class Client {
     private fetchRequestPath;
     private fetchRequestProtocolVersion;
     private clientEnd;
+    private sendMessageToClient;
     private checkMethod;
-    /***********************Public***********************/
-    bodyJSON(): void;
 }

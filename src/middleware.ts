@@ -1,4 +1,4 @@
-export function middleware(...[]: Iterable<Function>): any {
+export function middleware(...[]: Iterable<Function>): Function {
   const slice = Array.prototype.slice
 
   const stacks = slice.call(arguments)
@@ -14,7 +14,7 @@ export function middleware(...[]: Iterable<Function>): any {
     }
   }
 
-  return async function () {
+  return async function (...[]: Iterable<string | number | Record<any, any> | any[]>): Promise<void> {
     var arg = 0
     var next_old_parameters = []
     const params = slice.call(arguments)
